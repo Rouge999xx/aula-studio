@@ -1,0 +1,73 @@
+<Window x:Class="AulaStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AULA Studio" Width="1240" Height="830" MinWidth="1000" MinHeight="700"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="13.5">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Background="{StaticResource Panel}" BorderBrush="#12FFFFFF" BorderThickness="0,0,1,0">
+            <DockPanel Margin="14,20,14,16">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,26">
+                    <Image Source="Assets/app.ico" Width="30" Height="30" />
+                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="AULA Studio" FontSize="15.5" FontWeight="SemiBold" />
+                        <TextBlock Text="for the AULA F75" Foreground="{StaticResource Dim}" FontSize="11.5" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border DockPanel.Dock="Bottom" Background="{StaticResource Card}" CornerRadius="12" Padding="14,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource Faint}" VerticalAlignment="Center" Margin="0,0,9,0" />
+                            <TextBlock x:Name="StatusTitle" Text="Looking for the keyboardâ€¦" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <TextBlock x:Name="StatusDetail" Style="{StaticResource Hint}" Margin="18,4,0,0" />
+                        <Button x:Name="RescanButton" Content="Try again" Margin="18,10,0,0" HorizontalAlignment="Left" Padding="12,6" Click="Rescan_Click" Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel>
+                    <RadioButton x:Name="NavKeyboard" Style="{StaticResource Nav}" Tag="keyboard" AutomationProperties.Name="Keyboard" IsChecked="True" Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE765;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />
+                            <TextBlock Text="Keyboard" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource Nav}" Tag="knob" AutomationProperties.Name="Knob" Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE767;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />
+                            <TextBlock Text="Knob" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource Nav}" Tag="backups" AutomationProperties.Name="Backups" Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />
+                            <TextBlock Text="Backups" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource Nav}" Tag="settings" AutomationProperties.Name="Settings" Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />
+                            <TextBlock Text="Settings" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ContentControl x:Name="Body" Grid.Column="1" Focusable="False" />
+
+        <Border x:Name="ToastBox" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,26"
+                Padding="18,11" CornerRadius="12" Background="#F2F3F5" Visibility="Collapsed">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.45" Color="Black" />
+            </Border.Effect>
+            <TextBlock x:Name="ToastText" Foreground="#10131A" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="620" />
+        </Border>
+    </Grid>
+</Window>

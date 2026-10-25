@@ -1,0 +1,67 @@
+<UserControl x:Class="AulaStudio.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30,24,30,24" MaxWidth="980" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource H1}" Margin="0,0,0,18" />
+
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="App" Style="{StaticResource H2}" />
+                    <CheckBox x:Name="StartupSwitch" Style="{StaticResource Switch}" Click="Startup_Click">
+                        <StackPanel>
+                            <TextBlock Text="Start with Windows" />
+                            <TextBlock Style="{StaticResource Hint}" Text="Starts quietly in the tray at sign-in, so the knob works in your editing apps right away." />
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox x:Name="TraySwitch" Style="{StaticResource Switch}" Margin="0,14,0,0" Click="Tray_Click">
+                        <StackPanel>
+                            <TextBlock Text="Keep running in the tray when closed" />
+                            <TextBlock Style="{StaticResource Hint}" Text="Knob actions only work while AULA Studio is running. Exit it from the tray icon." />
+                        </StackPanel>
+                    </CheckBox>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardPanel}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Keyboard" Style="{StaticResource H2}" />
+                    <TextBlock x:Name="DeviceText" TextWrapping="Wrap" />
+                    <TextBlock x:Name="DevicePath" Style="{StaticResource Hint}" Margin="0,4,0,0" FontFamily="Cascadia Mono, Consolas" FontSize="11" />
+                    <Button Content="Look for the keyboard again" HorizontalAlignment="Left" Margin="0,12,0,0" Click="Rescan_Click" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardPanel}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Advanced" Style="{StaticResource H2}" />
+                    <CheckBox x:Name="AdvancedSwitch" Style="{StaticResource Switch}" Click="Advanced_Click">
+                        <StackPanel>
+                            <TextBlock Text="Allow changing the Fn key" />
+                            <TextBlock Style="{StaticResource Hint}" Text="Off by default. Moving Fn away from its key removes every Fn shortcut until you put it back (Backups › Repair Fn key)." />
+                        </StackPanel>
+                    </CheckBox>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardPanel}" Margin="0,16,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Copy" Padding="12,5" Click="CopyLog_Click" />
+                        <TextBlock Text="Communication log" Style="{StaticResource H2}" />
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource Hint}" Text="Every packet exchanged with the keyboard, newest first. Useful if something ever goes wrong." Margin="0,0,0,10" />
+                    <TextBox x:Name="LogBox" IsReadOnly="True" Height="220" FontFamily="Cascadia Mono, Consolas" FontSize="11"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardPanel}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="About" Style="{StaticResource H2}" />
+                    <TextBlock x:Name="AboutText" Style="{StaticResource Hint}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
