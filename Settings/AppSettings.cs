@@ -149,6 +149,75 @@ public sealed class KnobProfile
     };
 }
 
+public enum KeyActionKind { Key, Macro, Text, Off }
+public enum MacroStepKind { Keys, Text, Wait }
+
+/// <summary>One step of a macro: press a key or shortcut, type some text, or wait.</summary>
+public sealed class MacroStep
+{
+    public MacroStepKind Kind { get; set; }
+    public Shortcut Keys { get; set; } = new();
+    public string Text { get; set; } = "";
+    public int Milliseconds { get; set; } = 100;
+
+    public MacroStep Copy() => new() { Kind = Kind, Keys = Keys.Copy(), Text = Text, Milliseconds = Milliseconds };
+
+    public string Describe() => Kind switch
+    {
+        MacroStepKind.Keys => "Press " + Keys,
+        MacroStepKind.Text => $"Type “{KeyRule.Preview(Text)}”",
+        _ => $"Wait {Milliseconds} ms",
+    };
+}
+
+/// <summary>What one key does while a given app is in front.</summary>
+public sealed class KeyRule
+{
+    /// <summary>The key as Windows sees it (after any remapping stored in the keyboard), as a virtual-key code.</summary>
+    public int Trigger { get; set; }
+    public KeyActionKind Kind { get; set; } = KeyActionKind.Key;
+    /// <summary>For <see cref="KeyActionKind.Key"/>: held down as long as the trigger is.</summary>
+    public Shortcut Output { get; set; } = new();
+    public string Text { get; set; } = "";
+    public List<MacroStep> Steps { get; set; } = new();
+
+    /// <summary>A rule that isn't filled in yet leaves its key alone, so a half-made rule never blocks a key.</summary>
+    [JsonIgnore] public bool IsSet => Kind switch
+    {
+        KeyActionKind.Key => Output.Vk != 0,
+        KeyActionKind.Macro => Steps.Count > 0,
+        KeyActionKind.Text => Text.Length > 0,
+        _ => true,
+    };
+
+    public string Describe() => Kind switch
+    {
+        KeyActionKind.Key => Output.Vk == 0 ? "Not set yet" : Output.ToString(),
+        KeyActionKind.Macro => Steps.Count == 0 ? "Empty macro"
+            : "Macro: " + string.Join(",  ", Steps.Take(3).Select(s => s.Describe())) + (Steps.Count > 3 ? ",  …" : ""),
+        KeyActionKind.Text => Text.Length == 0 ? "No text yet" : $"Types “{Preview(Text)}”",
+        _ => "Does nothing",
+    };
+
+    public static string Preview(string text)
+    {
+        string flat = text.Replace("\r\n", "⏎").Replace('\n', '⏎');
+        return flat.Length <= 28 ? flat : flat[..27] + "…";
+    }
+}
+
+/// <summary>The key rules for one app. An empty ProcessName means "every app".</summary>
+public sealed class KeyProfile
+{
+    public string Name { get; set; } = "";
+    public string ProcessName { get; set; } = "";
+    public List<KeyRule> Rules { get; set; } = new();
+
+    [JsonIgnore] public bool IsDefault => ProcessName.Length == 0;
+
+    public static KeyProfile EveryApp() => new() { Name = "Every app" };
+}
+
 public sealed class AppSettings
 {
     const int CurrentVersion = 2;
@@ -161,6 +230,9 @@ public sealed class AppSettings
     /// <summary>Set from the tray menu: one mode for every app. Null means Automatic (per-app profiles).</summary>
     public KnobAction? ManualMode { get; set; }
     public List<KnobProfile> Profiles { get; set; } = KnobProfile.Defaults();
+    public bool AppKeysEnabled { get; set; } = true;
+    /// <summary>Per-app key rules (the App keys page). The first entry is "Every app".</summary>
+    public List<KeyProfile> KeyProfiles { get; set; } = new() { KeyProfile.EveryApp() };
 
     public static string FilePath { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AulaStudio", "settings.json");
@@ -181,13 +253,37 @@ public sealed class AppSettings
                 if (settings is not null)
                 {
                     if (!settings.Profiles.Any(p => p.IsDefault)) settings.Profiles.Insert(0, KnobProfile.Defaults()[0]);
+                    if (!settings.KeyProfiles.Any(p => p.IsDefault)) settings.KeyProfiles.Insert(0, KeyProfile.EveryApp());
                     Migrate(settings);
                     return settings;
                 }
             }
         }
-        catch (Exception ex) when (ex is JsonException or IOException) { App.Log(ex); }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            App.Log(ex);
+            KeepUnreadable();
+        }
         return new AppSettings { Version = CurrentVersion };
+    }
+
+    /// <summary>Set when the settings file couldn't be read; the main window shows it once.</summary>
+    public static string? LoadProblem { get; private set; }
+
+    /// <summary>
+    /// AULA Studio is about to start with default settings. Keep the unreadable file next to the new one first,
+    /// so the next save doesn't wipe out the knob and key rules in it for good.
+    /// </summary>
+    static void KeepUnreadable()
+    {
+        try
+        {
+            if (!File.Exists(FilePath)) return;
+            string copy = Path.ChangeExtension(FilePath, $".unreadable-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+            File.Copy(FilePath, copy, overwrite: true);
+            LoadProblem = $"Your settings file couldn't be read, so AULA Studio started with default settings. The old file is kept as {Path.GetFileName(copy)}.";
+        }
+        catch (IOException ex) { App.Log(ex); }
     }
 
     /// <summary>
@@ -208,7 +304,10 @@ public sealed class AppSettings
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, Json));
+            // Write a new file and swap it in, so a crash halfway through can't leave a broken settings file.
+            string temp = FilePath + ".new";
+            File.WriteAllText(temp, JsonSerializer.Serialize(this, Json));
+            File.Move(temp, FilePath, overwrite: true);
         }
         catch (IOException ex) { App.Log(ex); }
     }

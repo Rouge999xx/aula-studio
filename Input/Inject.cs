@@ -21,11 +21,7 @@ public static class Inject
     public static void Press(Shortcut shortcut)
     {
         if (shortcut.Vk == 0) return;
-        var mods = new List<int>();
-        if (shortcut.Ctrl) mods.Add(0xA2);
-        if (shortcut.Shift) mods.Add(0xA0);
-        if (shortcut.Alt) mods.Add(0xA4);
-        if (shortcut.Win) mods.Add(0x5B);
+        var mods = Modifiers(shortcut);
         var inputs = new List<INPUT>();
         inputs.AddRange(mods.Select(m => Key(m, up: false)));
         inputs.Add(Key(shortcut.Vk, up: false));
@@ -33,6 +29,60 @@ public static class Inject
         inputs.AddRange(Enumerable.Reverse(mods).Select(m => Key(m, up: true)));
         Send(inputs.ToArray());
     }
+
+    /// <summary>Presses a shortcut's modifiers, then its key, and leaves them all down until <see cref="KeyUp"/>.</summary>
+    public static void KeyDown(Shortcut shortcut)
+    {
+        if (shortcut.Vk == 0) return;
+        Send(Modifiers(shortcut).Select(m => Key(m, up: false)).Append(Key(shortcut.Vk, up: false)).ToArray());
+    }
+
+    /// <summary>Another key-down of a key that's being held, which is how Windows' own key repeat looks to apps.</summary>
+    public static void KeyRepeat(Shortcut shortcut)
+    {
+        if (shortcut.Vk != 0) Send(Key(shortcut.Vk, up: false));
+    }
+
+    public static void KeyUp(Shortcut shortcut)
+    {
+        if (shortcut.Vk == 0) return;
+        Send(Enumerable.Reverse(Modifiers(shortcut)).Select(m => Key(m, up: true)).Prepend(Key(shortcut.Vk, up: true)).ToArray());
+    }
+
+    /// <summary>Types text as characters, whatever the keyboard layout. New lines press Enter and tabs press Tab.</summary>
+    public static void Type(string text)
+    {
+        var inputs = new List<INPUT>();
+        foreach (char c in text.Replace("\r\n", "\n"))
+        {
+            if (c is '\n' or '\t')
+            {
+                int vk = c == '\n' ? 0x0D : 0x09;
+                inputs.Add(Key(vk, up: false));
+                inputs.Add(Key(vk, up: true));
+                continue;
+            }
+            inputs.Add(Character(c, up: false));
+            inputs.Add(Character(c, up: true));
+        }
+        if (inputs.Count > 0) Send(inputs.ToArray());
+    }
+
+    static List<int> Modifiers(Shortcut shortcut)
+    {
+        var mods = new List<int>();
+        if (shortcut.Ctrl) mods.Add(0xA2);
+        if (shortcut.Shift) mods.Add(0xA0);
+        if (shortcut.Alt) mods.Add(0xA4);
+        if (shortcut.Win) mods.Add(0x5B);
+        return mods;
+    }
+
+    static INPUT Character(char c, bool up) => new()
+    {
+        type = INPUT_KEYBOARD,
+        u = new InputUnion { ki = new KEYBDINPUT { wScan = c, dwFlags = KEYEVENTF_UNICODE | (up ? KEYEVENTF_KEYUP : 0), dwExtraInfo = KeyboardHook.Marker } },
+    };
 
     static INPUT Mouse(uint flags, int delta) => new()
     {

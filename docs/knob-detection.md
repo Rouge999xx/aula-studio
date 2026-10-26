@@ -99,10 +99,9 @@ The key tester on the Keyboard page got the same correction.
 5. **A faster per-app lookup.**
    - The hook callback finds the app in front with `QueryFullProcessImageName` instead of `Process.GetProcessById`, which enumerates every process on the system.
    - Windows drops hooks that answer slowly, so the callback has to stay fast.
-6. **Smaller fixes found along the way.**
-   - The Knob page's activity line shows the last event when the page opens. Pages are recreated on every visit, so the line used to reset.
-   - The Keyboard and Knob pages no longer leak a hook handler and event subscriptions on every visit.
-   - `knob.log` and `--knobtest` were added for troubleshooting.
+6. **Troubleshooting aids.**
+   - The Knob page's activity line now also shows the latest knob event that happened while another page was showing.
+   - `knob.log` and `--knobtest` were added.
 
 ## Verification
 

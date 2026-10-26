@@ -50,25 +50,22 @@ public partial class KeyboardView : UserControl
         }
         captureTimeout.Tick += (_, _) => StopCapture();
 
-        // The main window makes a new page each time it's opened, so hook in only while this one is on screen.
+        // The page is created once and kept, so it follows the keyboard even while another page is showing
+        // (e.g. a restore from the Backups page). Key capture and the key tester only need the hook while it's on screen.
+        Services.Keyboard.StateChanged += () => Dispatcher.BeginInvoke(LoadFromKeyboard);
         Loaded += (_, _) =>
         {
-            Services.Keyboard.StateChanged -= OnStateChanged;
-            Services.Keyboard.StateChanged += OnStateChanged;
             Services.Hook.Remove(OnKey);
             Services.Hook.AddFirst(OnKey);
         };
         Unloaded += (_, _) =>
         {
-            Services.Keyboard.StateChanged -= OnStateChanged;
             Services.Hook.Remove(OnKey);
             if (capturing) StopCapture();
         };
         BuildKeys();
         LoadFromKeyboard();
     }
-
-    void OnStateChanged() => Dispatcher.BeginInvoke(LoadFromKeyboard);
 
     static Brush Frozen(Color color)
     {

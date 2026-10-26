@@ -1,8 +1,9 @@
 # AULA Studio
 
-A Windows app for the **AULA F75** keyboard. It does three things:
+A Windows app for the **AULA F75** keyboard. It does four things:
 
 - **Remaps keys inside the keyboard itself.**
+- **Gives keys different jobs in different apps.** While a given app is in front, a key can press another key or a shortcut, run a macro, or type text.
 - **Makes the volume knob useful for video editing.** Per app, it can scroll, scroll sideways, zoom, or step through frames.
 - **Backs up the keyboard's memory before every change.**
 
@@ -39,6 +40,19 @@ A Windows app for the **AULA F75** keyboard. It does three things:
 - **Changes live in the keyboard's own memory,** so they work on any PC, with or without AULA Studio running.
 - **Nothing is written until you click Save to keyboard.** Pending changes are highlighted and can be undone.
 - **A key tester** shows exactly what the keyboard sends.
+
+### App keys: per-app keys and macros
+
+- **Rules per app.** While an app is in front, a key can:
+  - press another key, e.g. Page Up → Space;
+  - press a shortcut, e.g. Page Down → Ctrl+B;
+  - run a **macro**: steps that press keys, type text, and wait;
+  - type a piece of text;
+  - do nothing at all.
+- **"Every app" rules** apply everywhere, unless the app in front has its own rule for the same key.
+- **Remapped keys behave like real keys.** Holding one holds the new key down, so it repeats.
+- **Rules switch automatically** with the app in front, like the knob's. AULA Studio carries them out, so they work while it's running; they aren't stored in the keyboard.
+- **They combine with on-board remaps.** Remap a spare key to F13–F24 on the Keyboard page, then give it a different job in each app.
 
 ### The knob, for editing
 
@@ -126,6 +140,26 @@ The F75's firmware hard-wires the knob's rotation to volume. AULA Studio interce
 - **The bottom line shows every knob turn,** with the app it detected and what it did.
 - **Scrolling goes wherever the mouse pointer is,** like a real wheel, so keep the pointer over the timeline.
 
+### App keys
+
+![The App keys page](docs/images/appkeys.png)
+
+1. Pick an app on the left, or click **Add an app**, which lists the apps that are open right now. **Every app** applies everywhere.
+2. Click **Add a key** and press the key you want to change.
+3. Under **It does**, choose one of:
+
+   | Option | What the key does in that app |
+   |---|---|
+   | **Key or shortcut** | Presses another key or a shortcut. Press it, or pick it from the list. |
+   | **Macro** | Runs steps in order: **Press keys**, **Type text**, **Wait**. The arrows reorder them. |
+   | **Type text** | Types the text. A new line presses Enter. |
+   | **Nothing** | Blocks the key in that app. |
+
+4. Changes apply right away. The bottom line shows each rule as it's used.
+
+- Rules never apply inside AULA Studio itself, so its own editors keep working.
+- The volume and mute keys belong to the knob. Set what they do on the Knob page.
+
 ### Backups
 
 ![The Backups page](docs/images/backups.png)
@@ -154,6 +188,7 @@ The F75's firmware hard-wires the knob's rotation to volume. AULA Studio interce
 - **Right-click** shows:
   - **Knob mode**: Automatic (per app), or one mode for every app;
   - **Knob actions** on/off;
+  - **App keys** on/off;
   - **Start with Windows**;
   - **Exit**.
 
@@ -165,6 +200,8 @@ The knob isn't in the keyboard's key table. Turning it makes the keyboard send V
 - **Raw Input (backup route).** AULA Studio also reads the knob's HID reports directly. Both copies of each click are paired, so every click is handled exactly once.
 
 Getting this right was the hard part. Windows marks the knob's volume keys as *injected* (made by software, not by a keyboard driver). An earlier version ignored all injected keys, so it never saw the knob, and Windows kept changing the volume. The investigation and the fix are written up in [docs/knob-detection.md](docs/knob-detection.md).
+
+**App keys** use the same hook. AULA Studio swallows the key and sends the replacement, marked as its own so it's never remapped again. A key's release always matches its press, even if you switch apps while holding it.
 
 ## Safety
 
@@ -197,7 +234,8 @@ These rules are enforced in code, not just in the interface:
 |---|---|
 | The knob still changes the volume | Check that AULA Studio is running (tray icon) and that **Knob actions** is on. The bottom line of the Knob page shows which app and rule each turn used, and `knob.log` has the details. |
 | The knob scrolls, but CapCut's timeline doesn't move | In CapCut, a plain scroll only moves the track list up and down. Use **Scroll sideways** (or hold Alt) to move along the timeline. |
-| The knob does nothing in one app | If that app runs as administrator, Windows blocks input from normal apps. Run AULA Studio as administrator too. |
+| The knob or an app key does nothing in one app | If that app runs as administrator, Windows blocks input from normal apps. Run AULA Studio as administrator too. |
+| An app key does nothing anywhere | Check that **App keys** is on (on its page or in the tray) and that the rule is filled in. A rule without a key, steps or text leaves its key alone. |
 | The knob changes the backlight instead of the volume | Holding the knob down switches it to backlight brightness, which Windows can't see. Hold it down again to switch back. |
 | "AULA's own app is open" | Close AULA's app (check the tray too), then save again. |
 | "Plug in the USB cable" | The 2.4 GHz receiver can't be used for configuration. Connect the cable. |
@@ -207,7 +245,7 @@ These rules are enforced in code, not just in the interface:
 
 | What | Where |
 |---|---|
-| Settings | `%APPDATA%\AulaStudio\settings.json` |
+| Settings | `%APPDATA%\AulaStudio\settings.json`: knob and app-key rules. If it ever can't be read, AULA Studio keeps it as `settings.unreadable-<date>.json` before starting with defaults. |
 | Backups | `%APPDATA%\AulaStudio\backups\*.json`: raw hex of both key layers, the lighting block and the color table |
 | Knob log | `%APPDATA%\AulaStudio\knob.log`: volume/mute keys and knob clicks only, never other keys |
 | Errors | `%APPDATA%\AulaStudio\error.log` |
@@ -249,11 +287,12 @@ AulaStudio/
 ├─ Protocol/              key table format, HID usage names
 ├─ Layout/                key positions on the F75
 ├─ Backup/                backup files
-├─ Input/                 keyboard hook, Raw Input, input injection
+├─ Input/                 keyboard hook, Raw Input, key capture, input injection
+├─ AppKeys/               per-app key rules and macros
 ├─ Knob/                  knob engine, volume guard, on-screen label, knob log, --knobtest
 ├─ Settings/              settings and knob presets
 ├─ Tray/                  tray icon and menu
-├─ Views/                 the Keyboard, Knob, Backups and Settings pages
+├─ Views/                 the Keyboard, Knob, App keys, Backups and Settings pages
 └─ docs/                  documentation and screenshots
 ```
 
@@ -265,7 +304,8 @@ AulaStudio/
 
 ## Known limitations
 
-- **No lighting or macros yet.** Keep using AULA's app for lighting, and close it before saving key changes here.
+- **No lighting yet.** Keep using AULA's app for lighting, and close it before saving key changes here.
+- **Macros and app keys run in AULA Studio,** not in the keyboard, so they need it running. Only the Keyboard page's remaps are stored in the keyboard.
 - **Configuration needs the USB cable.** The 2.4 GHz receiver and Bluetooth aren't supported for configuration.
 - **The knob press is expected to arrive as Mute.** This hasn't been confirmed on hardware yet.
 - **Tested on one keyboard only:** a wired F75 (`258A:010C`) on Windows 11.

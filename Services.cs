@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using AulaStudio.AppKeys;
 using AulaStudio.Device;
 using AulaStudio.Input;
 using AulaStudio.Knob;
@@ -15,6 +16,7 @@ public static class Services
     public static KeyboardHook Hook { get; private set; } = null!;
     public static ConsumerInput Consumer { get; private set; } = null!;
     public static KnobEngine Knob { get; private set; } = null!;
+    public static AppKeyEngine AppKeys { get; private set; } = null!;
 
     /// <summary>Set by the main window; shows a short message at the bottom of it.</summary>
     public static Action<string, bool>? ToastHandler { get; set; }
@@ -27,6 +29,7 @@ public static class Services
         Hook = new KeyboardHook();
         Consumer = new ConsumerInput();
         Knob = new KnobEngine(Hook, Consumer, Settings, dispatcher);
+        AppKeys = new AppKeyEngine(Hook, Settings, dispatcher);
     }
 
     public static void Dispose()

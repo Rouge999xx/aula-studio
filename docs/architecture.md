@@ -15,7 +15,8 @@ AULA Studio is a WPF app on .NET 10, built as one framework-dependent exe. WinFo
    - `KeyboardService`;
    - `KeyboardHook`;
    - `ConsumerInput`;
-   - `KnobEngine`.
+   - `KnobEngine`;
+   - `AppKeyEngine`.
 4. **The window and tray.** The main window is created (shown unless `--tray`), then the tray icon.
 5. **Connecting.** The keyboard is connected on a background task.
 
@@ -90,6 +91,35 @@ Windows silently removes a low-level hook that is slow to answer, so the callbac
 - It decides whether to swallow the key.
 - It queues everything else (injecting input, the volume guard, updating the UI) to run after it returns.
 
+## App keys
+
+Per-app key rules and macros, set on the App keys page.
+
+| Piece | Job |
+|---|---|
+| `AppKeys/AppKeyEngine.cs` | Hook handler. For a key with a rule in the app in front (or in "Every app"), it swallows the key and sends the replacement. |
+| `Input/KeyCapture.cs` | "Press a key" for editors. It hooks in ahead of everything else and grabs the next key or shortcut, so no app sees it. |
+| `Input/Inject.cs` | `KeyDown` / `KeyRepeat` / `KeyUp` hold a replacement key exactly as long as the real one; `Type` sends text as Unicode characters, independent of the keyboard layout. |
+| `Settings/AppSettings.cs` | `KeyProfile` (one app), `KeyRule` (one key), `MacroStep` (press keys, type text, or wait) |
+| `Views/AppKeysView.xaml(.cs)` | The App keys page |
+
+How a rule runs:
+
+- **Key or shortcut.** The key-down is swallowed, and the replacement's modifiers and key go down. Each key repeat sends another key-down of the replacement, and the key-up releases it all.
+  - What was pressed is remembered per key, so the release matches even if the app in front changed meanwhile.
+  - A key-down more than 1.1 s after the last one, with no key-up in between, means a release was missed (for example, the PC locked). The old replacement is released first.
+- **Macro and text** run once per press, on a background task, with 20 ms between steps. A second press while a macro is still running is ignored.
+- **Nothing** swallows the key's press and release.
+- **Rules that aren't filled in** (no key, no steps, no text) leave their key alone, and so do the knob's volume and mute keys.
+- **Rules never apply while AULA Studio itself is in front,** so its own editors keep working.
+
+Everything AULA Studio sends carries the hook marker, so a replacement is never remapped again. Page Up → Space and Space → Page Up can't loop.
+
+## Settings safety
+
+- **Atomic saves.** `settings.json` is written to `settings.json.new` and then moved into place, so a crash can't leave half a file.
+- **Unreadable files are kept.** If the file can't be read, AULA Studio copies it to `settings.unreadable-<date>.json` and then starts with defaults. It also says so in the main window, so the next save can't silently wipe the knob and key rules in the old file.
+
 ## The interface
 
 - **`MainWindow`**:
@@ -98,16 +128,18 @@ Windows silently removes a low-level hook that is slow to answer, so the callbac
   - toasts;
   - a dark title bar, set through DWM.
   - It also rescans when Windows reports a device change.
-- **Pages** (`Views/`): Keyboard, Knob, Backups and Settings.
-  - The window creates a new page each time one is opened.
-  - Pages therefore subscribe to services in `Loaded` and unsubscribe in `Unloaded`.
+- **Pages** (`Views/`): Keyboard, Knob, App keys, Backups and Settings.
+  - Each page is created the first time it's opened, then kept.
+  - Hook handlers that only matter on screen (key capture, the key tester) attach in `Loaded` and detach in `Unloaded`.
+  - The Keyboard page keeps following the keyboard while hidden, for example after a restore from the Backups page.
 - **`Theme.xaml`**: the colors and every control style.
 - **`Tray/TrayIcon.cs`**: a WinForms `NotifyIcon` with a dark menu renderer. The menu is rebuilt each time it opens, so the checkmarks are always current.
 - **`app.manifest`**: per-monitor DPI awareness (v2), so the window stays sharp on scaled displays.
 
 ## Threading
 
-- **The UI thread** hosts the keyboard hook and the Raw Input window, so knob handling never needs locks.
+- **The UI thread** hosts the keyboard hook and the Raw Input window, so knob and app-key handling never need locks.
+- **Macros** run on background tasks, because their waits must not hold up the hook.
 - **Keyboard I/O** runs on background tasks, serialized by a lock in `KeyboardService`, with another inside `AulaDevice`.
 - **Core Audio notifications** arrive on Windows' threads and are passed to the UI thread.
 - **The knob log** is written on its own background thread.

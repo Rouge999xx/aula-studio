@@ -44,6 +44,12 @@
                             <TextBlock Text="Knob" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
+                    <RadioButton Style="{StaticResource Nav}" Tag="appkeys" AutomationProperties.Name="App keys" Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />
+                            <TextBlock Text="App keys" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
                     <RadioButton Style="{StaticResource Nav}" Tag="backups" AutomationProperties.Name="Backups" Checked="Nav_Checked">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="16" Width="28" VerticalAlignment="Center" />

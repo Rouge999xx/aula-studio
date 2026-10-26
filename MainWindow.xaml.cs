@@ -30,6 +30,7 @@ public partial class MainWindow : Window
         Closing += OnClosing;
         ShowView("keyboard");
         UpdateStatus();
+        if (Settings.AppSettings.LoadProblem is { } problem) ShowToast(problem, isError: true);
     }
 
     public void BringToFront()
@@ -84,6 +85,7 @@ public partial class MainWindow : Window
             {
                 "keyboard" => new KeyboardView(),
                 "knob" => new KnobView(),
+                "appkeys" => new AppKeysView(),
                 "backups" => new BackupsView(),
                 _ => new SettingsView(),
             };

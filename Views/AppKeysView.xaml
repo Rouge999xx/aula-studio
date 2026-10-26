@@ -1,0 +1,63 @@
+<UserControl x:Class="AulaStudio.Views.AppKeysView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="30,24,30,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel>
+            <CheckBox x:Name="EnabledSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Content="App keys on" VerticalAlignment="Center" Click="Enabled_Click" />
+            <TextBlock Text="App keys" Style="{StaticResource H1}" />
+        </DockPanel>
+        <TextBlock Grid.Row="1" Style="{StaticResource Hint}" Margin="0,8,0,14" MaxWidth="940" HorizontalAlignment="Left"
+                   Text="Make keys do something different in the app you're working in: press another key or a shortcut, run a macro, type text, or do nothing. Like the knob, the rules for the app in front are used automatically. They live in AULA Studio, not in the keyboard, so they work while it's running. To change a key everywhere, even without AULA Studio, use the Keyboard page." />
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardPanel}" Padding="12">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" Margin="4,2,4,10"
+                               Text="Rules for each app. Picking one here just lets you edit it." />
+                    <Button DockPanel.Dock="Bottom" Style="{StaticResource Ghost}" Margin="0,8,0,0" Click="AddApp_Click" HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" Margin="0,1,8,0" />
+                            <TextBlock Text="Add an app" />
+                        </StackPanel>
+                    </Button>
+                    <ListBox x:Name="AppList" SelectionChanged="App_Selected" />
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="0">
+                <ScrollViewer x:Name="EditorScroll" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="Editor" Margin="22,20,22,20" />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="3" Background="{StaticResource Panel}" CornerRadius="12" Padding="16,11" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE945;" FontFamily="{StaticResource IconFont}" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBlock x:Name="ActivityText" Foreground="{StaticResource Dim}" Text="Use a key that has a rule, in its app, to test it. What it did, and in which app, shows up here." />
+            </StackPanel>
+        </Border>
+
+        <Popup x:Name="AddPopup" StaysOpen="False" Placement="MousePoint" AllowsTransparency="True">
+            <Border Background="#2A2C36" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="12" Padding="10" Width="320">
+                <StackPanel>
+                    <TextBlock Text="Apps that are open right now" Style="{StaticResource Hint}" Margin="4,0,0,8" />
+                    <ListBox x:Name="RunningApps" MaxHeight="340" SelectionChanged="RunningApp_Selected" />
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

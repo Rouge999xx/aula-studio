@@ -26,7 +26,7 @@ public partial class KnobView : UserControl
     {
         InitializeComponent();
         EnabledSwitch.IsChecked = Settings.KnobEnabled;
-        // The main window makes a new page each time it's opened, so subscribe only while this one is on screen.
+        // Only while this page is on screen; when it comes back it shows the latest knob event it missed.
         Loaded += (_, _) =>
         {
             Services.Knob.Activity -= ShowActivity;

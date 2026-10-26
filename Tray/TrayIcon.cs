@@ -52,7 +52,10 @@ public sealed class TrayIcon : IDisposable
         var knob = new WinForms.ToolStripMenuItem("Knob actions") { Checked = Services.Settings.KnobEnabled, CheckOnClick = true };
         knob.CheckedChanged += (_, _) => { Services.Settings.KnobEnabled = knob.Checked; Services.Settings.Save(); };
         menu.Items.Add(knob);
-        var startup = new WinForms.ToolStripMenuItem("Start with Windows") { Checked = Startup.IsEnabled, CheckOnClick = true };
+        var appKeys = new WinForms.ToolStripMenuItem("App keys") { Checked = Services.Settings.AppKeysEnabled, CheckOnClick = true };
+        appKeys.CheckedChanged += (_, _) => { Services.Settings.AppKeysEnabled = appKeys.Checked; Services.Settings.Save(); };
+        menu.Items.Add(appKeys);
+        var startup =new WinForms.ToolStripMenuItem("Start with Windows") { Checked = Startup.IsEnabled, CheckOnClick = true };
         startup.CheckedChanged += (_, _) => Startup.IsEnabled = startup.Checked;
         menu.Items.Add(startup);
         menu.Items.Add(new WinForms.ToolStripSeparator());

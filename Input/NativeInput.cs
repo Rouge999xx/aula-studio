@@ -9,7 +9,7 @@ internal static class NativeInput
     public const uint LLKHF_INJECTED = 0x10;
     public const uint INPUT_MOUSE = 0, INPUT_KEYBOARD = 1;
     public const uint MOUSEEVENTF_WHEEL = 0x0800, MOUSEEVENTF_HWHEEL = 0x1000;
-    public const uint KEYEVENTF_EXTENDEDKEY = 0x1, KEYEVENTF_KEYUP = 0x2;
+    public const uint KEYEVENTF_EXTENDEDKEY = 0x1, KEYEVENTF_KEYUP = 0x2, KEYEVENTF_UNICODE = 0x4;
 
     public delegate IntPtr LowLevelProc(int code, IntPtr wParam, IntPtr lParam);
 
